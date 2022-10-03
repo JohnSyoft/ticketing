@@ -1,5 +1,6 @@
 import express from "express";
 import jwt from "jsonwebtoken";
+
 import { currentUserMiddleware } from "@ticketsjohn/common";
 const router = express.Router();
 

@@ -4,9 +4,13 @@ import { json } from "body-parser";
 import "express-async-errors";
 import cookieSession from "cookie-session";
 import requireAuth from "@ticketsjohn/common/build/middleware/require-auth";
-import { CreateRoute } from "./routes/routes";
 import { currentUserMiddleware, errorHanlder } from "@ticketsjohn/common";
 import { natsWrapper } from "./nats-wrapper";
+import { deleteRouter } from "./routes/delete";
+import { IndexOrderRoute } from "./routes";
+import { newOrderRouter } from "./routes/new";
+import { showOrderRoutes } from "./routes/show";
+import { TicketCreatedListner } from "./events/listner/ticket-created-listner";
 const app = express();
 app.set("trust proxy", 1);
 app.use(json());
@@ -16,8 +20,6 @@ app.use(
     secure: true,
   })
 );
-
-app.use("/api/tickets", currentUserMiddleware, requireAuth, CreateRoute);
 
 const start = async () => {
   if (!process.env.JWT_KEY) {
@@ -49,6 +51,7 @@ const start = async () => {
   process.on("SIGTERM", () => {
     natsWrapper.client.close();
   });
+  new TicketCreatedListner(natsWrapper.client).listen();
   await mongoose
     .connect(process.env.MONGO_URL)
     .then(() => {
@@ -58,6 +61,11 @@ const start = async () => {
       console.log(err);
     });
 };
+
+app.use(deleteRouter);
+app.use(IndexOrderRoute);
+app.use(newOrderRouter);
+app.use(showOrderRoutes);
 app.use(errorHanlder);
 
 app.listen(3000, () => {

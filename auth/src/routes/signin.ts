@@ -43,6 +43,9 @@ router.post(
     req.session = {
       jwt: userJwt,
     };
+    // req.cookies.session = {
+    //   jwt: userJwt,
+    // };
     res.status(200).json(userExist);
   }
 );
